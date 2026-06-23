@@ -9,6 +9,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.nxvpn.app.data.model.ServerProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "nxvpn_profiles")
