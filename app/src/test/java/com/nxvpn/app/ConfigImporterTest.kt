@@ -40,7 +40,7 @@ class ConfigImporterTest {
 
     @Test
     fun `imports wireguard endpoint and country`() {
-        val profile = ConfigImporter.fromText(wireGuardConfig, name = "US East").getOrThrow()
+        val profile = ConfigImporter.fromText(wireGuardConfig, fallbackName = "US East").getOrThrow()
         assertEquals(VpnProtocol.WIREGUARD, profile.protocol)
         assertEquals("us-east.example.com:51820", profile.endpoint)
         assertEquals("US", profile.countryCode)
@@ -48,13 +48,13 @@ class ConfigImporterTest {
 
     @Test
     fun `imports openvpn endpoint`() {
-        val profile = ConfigImporter.fromText(openVpnConfig, name = null).getOrThrow()
+        val profile = ConfigImporter.fromText(openVpnConfig, fallbackName = null).getOrThrow()
         assertEquals(VpnProtocol.OPENVPN, profile.protocol)
         assertEquals("vpn.example.com:1194", profile.endpoint)
     }
 
     @Test
     fun `empty config fails`() {
-        assertTrue(ConfigImporter.fromText("   ", name = null).isFailure)
+        assertTrue(ConfigImporter.fromText("   ", fallbackName = null).isFailure)
     }
 }

@@ -42,22 +42,36 @@ object ConfigImporter {
             }.orEmpty()
     }
 
+    private data class CountryRule(
+        val phrases: List<String>,
+        val codes: List<String>,
+        val code: String,
+        val flag: String,
+    )
+
+    private val countryRules = listOf(
+        CountryRule(listOf("united states", "america"), listOf("us", "usa"), "US", "🇺🇸"),
+        CountryRule(listOf("germany", "deutschland", "frankfurt"), listOf("de", "ger"), "DE", "🇩🇪"),
+        CountryRule(listOf("netherlands", "amsterdam"), listOf("nl"), "NL", "🇳🇱"),
+        CountryRule(listOf("united kingdom", "london"), listOf("uk", "gb"), "GB", "🇬🇧"),
+        CountryRule(listOf("turkey", "türkiye", "turkiye", "istanbul"), listOf("tr"), "TR", "🇹🇷"),
+        CountryRule(listOf("france", "paris"), listOf("fr"), "FR", "🇫🇷"),
+        CountryRule(listOf("japan", "tokyo"), listOf("jp"), "JP", "🇯🇵"),
+        CountryRule(listOf("singapore"), listOf("sg"), "SG", "🇸🇬"),
+        CountryRule(listOf("canada"), listOf("ca"), "CA", "🇨🇦"),
+    )
+
     /** Very small flag lookup; covers the common cases people import. Everything else gets a globe. */
     private fun guessCountry(text: String): Pair<String, String> {
         val haystack = text.lowercase()
-        val table = listOf(
-            Triple(listOf("united states", "usa", "u.s.", "-us", "_us", "america"), "US", "🇺🇸"),
-            Triple(listOf("germany", "deutschland", "-de", "frankfurt"), "DE", "🇩🇪"),
-            Triple(listOf("netherlands", "amsterdam", "-nl"), "NL", "🇳🇱"),
-            Triple(listOf("united kingdom", "london", "-uk", "-gb"), "GB", "🇬🇧"),
-            Triple(listOf("turkey", "türkiye", "turkiye", "istanbul", "-tr"), "TR", "🇹🇷"),
-            Triple(listOf("france", "paris", "-fr"), "FR", "🇫🇷"),
-            Triple(listOf("japan", "tokyo", "-jp"), "JP", "🇯🇵"),
-            Triple(listOf("singapore", "-sg"), "SG", "🇸🇬"),
-            Triple(listOf("canada", "-ca"), "CA", "🇨🇦"),
-        )
-        for ((keys, code, flag) in table) {
-            if (keys.any { it in haystack }) return code to flag
+        // Whole-word tokens (split on anything that isn't a letter/digit) so a 2-letter
+        // country code like "us" in "US East" or "us-east.example.com" is matched, while
+        // random substrings inside base64 keys are not.
+        val tokens = haystack.split(Regex("[^a-z0-9]+")).filter { it.isNotEmpty() }.toSet()
+
+        for (rule in countryRules) {
+            val matched = rule.phrases.any { it in haystack } || rule.codes.any { it in tokens }
+            if (matched) return rule.code to rule.flag
         }
         return "" to "🌐"
     }
