@@ -29,8 +29,11 @@ android {
 
     signingConfigs {
         create("release") {
-            val storePath = System.getenv("KEYSTORE_FILE") ?: keystoreProps.getProperty("storeFile")
-            if (storePath != null && file(storePath).exists()) {
+            // The CI workflow always exports KEYSTORE_FILE, but leaves it empty when no signing
+            // secrets are configured — so treat blank as "unset" before resolving the file.
+            val storePath = (System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() })
+                ?: keystoreProps.getProperty("storeFile")
+            if (!storePath.isNullOrBlank() && file(storePath).exists()) {
                 storeFile = file(storePath)
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps.getProperty("storePassword")
                 keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps.getProperty("keyAlias")
