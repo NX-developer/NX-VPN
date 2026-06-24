@@ -1,11 +1,11 @@
 name: Build NX-VPN APK
 
 on:
+  # Only build on version tags (publish a release). Plain pushes to main no longer
+  # trigger a separate build — that just duplicated the run when a tag points at the
+  # same commit. Use the "Run workflow" button (workflow_dispatch) for ad-hoc builds.
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
