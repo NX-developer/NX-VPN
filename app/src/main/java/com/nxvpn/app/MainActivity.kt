@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
     private val app get() = application as NxVpnApplication
 
     private val viewModel: MainViewModel by viewModels {
-        MainViewModel.Factory(app.profileRepository, app.vpnManager)
+        MainViewModel.Factory(application, app.profileRepository, app.vpnManager)
     }
 
     /** Profile waiting for VPN consent to be granted. */
@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
                 openVpn.startVpn(profile)
             }.onFailure {
                 openVpn.cancel()
-                viewModel.showMessage(it.message ?: "OpenVPN connection failed")
+                viewModel.showMessage(getString(R.string.msg_openvpn_failed))
             }
         }
     }
@@ -138,7 +138,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun promptInstallEngine() {
-        viewModel.showMessage("Install \"OpenVPN for Android\" to use these servers")
+        viewModel.showMessage(getString(R.string.msg_install_engine))
         runCatching {
             startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse("https://f-droid.org/packages/de.blinkt.openvpn/"))

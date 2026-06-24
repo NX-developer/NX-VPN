@@ -23,11 +23,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nxvpn.app.R
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 
-private enum class Tab(val label: String) { HOME("Home"), FREE("Free"), SERVERS("Servers") }
+private enum class Tab(val labelRes: Int) {
+    HOME(R.string.nav_home),
+    FREE(R.string.nav_free),
+    SERVERS(R.string.nav_servers),
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,26 +82,26 @@ fun NxVpnApp(
                     selected = tab == Tab.HOME,
                     onClick = { tab = Tab.HOME },
                     icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                    label = { Text(Tab.HOME.label) },
+                    label = { Text(stringResource(Tab.HOME.labelRes)) },
                 )
                 NavigationBarItem(
                     selected = tab == Tab.FREE,
                     onClick = { tab = Tab.FREE },
                     icon = { Icon(Icons.Filled.Public, contentDescription = null) },
-                    label = { Text(Tab.FREE.label) },
+                    label = { Text(stringResource(Tab.FREE.labelRes)) },
                 )
                 NavigationBarItem(
                     selected = tab == Tab.SERVERS,
                     onClick = { tab = Tab.SERVERS },
                     icon = { Icon(Icons.Filled.Dns, contentDescription = null) },
-                    label = { Text(Tab.SERVERS.label) },
+                    label = { Text(stringResource(Tab.SERVERS.labelRes)) },
                 )
             }
         },
         floatingActionButton = {
             if (tab == Tab.SERVERS) {
                 FloatingActionButton(onClick = { showImport = true }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Import server")
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.import_title))
                 }
             }
         },

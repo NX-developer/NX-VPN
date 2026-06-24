@@ -1,9 +1,12 @@
 package com.nxvpn.app.ui
 
+import android.app.Application
 import android.os.SystemClock
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.nxvpn.app.R
 import com.nxvpn.app.data.ConfigImporter
 import com.nxvpn.app.data.ProfileRepository
 import com.nxvpn.app.data.VpnGateRepository
@@ -21,10 +24,14 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MainViewModel(
+    application: Application,
     private val repository: ProfileRepository,
     private val vpnManager: VpnManager,
     private val vpnGate: VpnGateRepository = VpnGateRepository(),
-) : ViewModel() {
+) : AndroidViewModel(application) {
+
+    private fun string(resId: Int, vararg args: Any): String =
+        getApplication<Application>().getString(resId, *args)
 
     val profiles: StateFlow<List<ServerProfile>> =
         repository.profiles.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -58,14 +65,18 @@ class MainViewModel(
     }
 
     fun importConfig(rawText: String, name: String?) {
+        if (rawText.isBlank()) {
+            _snackbar.value = string(R.string.msg_config_empty)
+            return
+        }
         ConfigImporter.fromText(rawText, name)
             .onSuccess { profile ->
                 viewModelScope.launch {
                     repository.upsert(profile)
-                    _snackbar.value = "Imported \"${profile.name}\""
+                    _snackbar.value = string(R.string.msg_imported, profile.name)
                 }
             }
-            .onFailure { _snackbar.value = it.message ?: "Could not parse config" }
+            .onFailure { _snackbar.value = string(R.string.msg_parse_failed) }
     }
 
     fun deleteProfile(id: String) {
@@ -80,9 +91,9 @@ class MainViewModel(
             vpnGate.fetch()
                 .onSuccess { servers ->
                     _freeServers.value = servers
-                    if (servers.isEmpty()) _snackbar.value = "No public servers available right now"
+                    if (servers.isEmpty()) _snackbar.value = string(R.string.msg_no_public_servers)
                 }
-                .onFailure { _snackbar.value = it.message ?: "Could not load public servers" }
+                .onFailure { _snackbar.value = string(R.string.msg_load_failed) }
             _freeLoading.value = false
         }
     }
@@ -94,7 +105,7 @@ class MainViewModel(
     fun connect(profile: ServerProfile) {
         viewModelScope.launch {
             runCatching { vpnManager.connect(profile, SystemClock.elapsedRealtime()) }
-                .onFailure { _snackbar.value = it.message ?: "Connection failed" }
+                .onFailure { _snackbar.value = it.message ?: string(R.string.msg_connect_failed) }
         }
     }
 
@@ -105,11 +116,12 @@ class MainViewModel(
     fun consumeSnackbar() { _snackbar.value = null }
 
     class Factory(
+        private val application: Application,
         private val repository: ProfileRepository,
         private val vpnManager: VpnManager,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            MainViewModel(repository, vpnManager) as T
+            MainViewModel(application, repository, vpnManager) as T
     }
 }

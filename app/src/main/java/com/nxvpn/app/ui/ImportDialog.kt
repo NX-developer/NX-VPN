@@ -18,7 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nxvpn.app.R
 
 @Composable
 fun ImportDialog(
@@ -31,25 +33,25 @@ fun ImportDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Import server") },
+        title = { Text(stringResource(R.string.import_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = onPickFile, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
-                    Text("  Choose .conf / .ovpn file")
+                    Text("  " + stringResource(R.string.import_choose_file))
                 }
-                Text("…or paste the config below")
+                Text(stringResource(R.string.import_or_paste))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name (optional)") },
+                    label = { Text(stringResource(R.string.import_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = config,
                     onValueChange = { config = it },
-                    label = { Text("Config text") },
+                    label = { Text(stringResource(R.string.import_config_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 120.dp, max = 220.dp),
@@ -60,8 +62,8 @@ fun ImportDialog(
             TextButton(
                 onClick = { onImportText(config, name) },
                 enabled = config.isNotBlank(),
-            ) { Text("Import") }
+            ) { Text(stringResource(R.string.action_import)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

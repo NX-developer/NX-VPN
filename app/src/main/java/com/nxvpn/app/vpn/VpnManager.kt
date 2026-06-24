@@ -1,6 +1,7 @@
 package com.nxvpn.app.vpn
 
 import android.content.Context
+import android.net.TrafficStats as AndroidTrafficStats
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 import com.nxvpn.app.data.model.TrafficStats
@@ -35,7 +36,29 @@ class VpnManager(context: Context) {
     val status: StateFlow<ConnectionStatus> = _status.asStateFlow()
 
     /** OpenVPN delegate. Public so the Activity can drive its consent dialogs. */
-    val openVpn = OpenVpnConnector(appContext) { _status.value = it }
+    val openVpn = OpenVpnConnector(appContext) { onOpenVpnStatus(it) }
+
+    /**
+     * Device-wide byte totals captured when an OpenVPN tunnel comes up. The external engine
+     * doesn't expose per-tunnel counters over its API, so we approximate the tunnel's traffic
+     * with the change in device totals since connect (while connected, essentially all traffic
+     * flows through the tunnel). Null whenever no OpenVPN tunnel is up.
+     */
+    private var openVpnBaseline: Pair<Long, Long>? = null
+
+    private fun onOpenVpnStatus(status: ConnectionStatus) {
+        when (status) {
+            is ConnectionStatus.Connected ->
+                if (openVpnBaseline == null) openVpnBaseline = deviceBytes()
+            is ConnectionStatus.Disconnected, is ConnectionStatus.Error ->
+                openVpnBaseline = null
+            else -> Unit
+        }
+        _status.value = status
+    }
+
+    private fun deviceBytes(): Pair<Long, Long> =
+        AndroidTrafficStats.getTotalRxBytes() to AndroidTrafficStats.getTotalTxBytes()
 
     /** Brings up a WireGuard tunnel. OpenVPN is handled via [openVpn] from the Activity. */
     suspend fun connect(profile: ServerProfile, monotonicNow: Long) {
@@ -88,12 +111,26 @@ class VpnManager(context: Context) {
 
     /** Reads live byte counters from the backend; returns zeros when no tunnel is up. */
     suspend fun currentTraffic(): TrafficStats {
-        val tunnel = activeTunnel ?: return TrafficStats()
-        return withContext(Dispatchers.IO) {
-            runCatching {
-                val stats = backend.getStatistics(tunnel)
-                TrafficStats(rxBytes = stats.totalRx(), txBytes = stats.totalTx())
-            }.getOrDefault(TrafficStats())
+        // WireGuard: accurate per-tunnel counters straight from the backend.
+        activeTunnel?.let { tunnel ->
+            return withContext(Dispatchers.IO) {
+                runCatching {
+                    val stats = backend.getStatistics(tunnel)
+                    TrafficStats(rxBytes = stats.totalRx(), txBytes = stats.totalTx())
+                }.getOrDefault(TrafficStats())
+            }
         }
+        // OpenVPN (external engine): approximate from device-wide totals since connect.
+        openVpnBaseline?.let { (rx0, tx0) ->
+            val rx = AndroidTrafficStats.getTotalRxBytes()
+            val tx = AndroidTrafficStats.getTotalTxBytes()
+            if (rx >= 0 && tx >= 0) {
+                return TrafficStats(
+                    rxBytes = (rx - rx0).coerceAtLeast(0),
+                    txBytes = (tx - tx0).coerceAtLeast(0),
+                )
+            }
+        }
+        return TrafficStats()
     }
 }

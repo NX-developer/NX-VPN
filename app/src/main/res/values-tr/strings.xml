@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NX-VPN</string>
+
+    <!-- Alt gezinme -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_free">Ücretsiz</string>
+    <string name="nav_servers">Sunucular</string>
+
+    <!-- Bağlantı durumu -->
+    <string name="status_connected">Bağlandı</string>
+    <string name="status_connecting">Bağlanıyor…</string>
+    <string name="status_disconnecting">Bağlantı kesiliyor…</string>
+    <string name="status_disconnected">Bağlı değil</string>
+    <string name="status_error">Hata: %1$s</string>
+
+    <!-- Ana ekran -->
+    <string name="tap_to_connect">Bağlanmak için dokun</string>
+    <string name="tap_to_disconnect">Bağlantıyı kesmek için dokun</string>
+    <string name="cd_connect">Bağlan</string>
+    <string name="cd_disconnect">Bağlantıyı kes</string>
+    <string name="no_server_selected">Sunucu seçilmedi — seçmek için dokun</string>
+    <string name="connected_for">Bağlı kalma süresi</string>
+    <string name="traffic_download">İndirme</string>
+    <string name="traffic_upload">Yükleme</string>
+
+    <!-- Sunucular sekmesi -->
+    <string name="servers_empty_title">Henüz sunucu yok</string>
+    <string name="servers_empty_desc">WireGuard (.conf) veya OpenVPN (.ovpn) yapılandırması içe aktarmak için + düğmesine dokun.</string>
+    <string name="cd_active">Etkin</string>
+    <string name="cd_delete_server">Sunucuyu sil</string>
+
+    <!-- Ücretsiz sunucular sekmesi -->
+    <string name="free_title">Hazır sunucular</string>
+    <string name="free_subtitle">Ücretsiz genel OpenVPN aktarıcıları (VPN Gate). OpenVPN motoru uygulamasını gerektirir.</string>
+    <string name="cd_refresh">Sunucu listesini yenile</string>
+    <string name="free_empty_title">Genel sunucu yüklenmedi</string>
+    <string name="free_empty_desc">En güncel ücretsiz VPN Gate sunucularını getirmek için yenile düğmesine dokun.</string>
+    <string name="search_hint">Ülke veya sunucu ara…</string>
+    <string name="cd_search">Ara</string>
+    <string name="cd_clear_search">Aramayı temizle</string>
+    <string name="search_no_results">\"%1$s\" ile eşleşen sunucu yok</string>
+
+    <!-- İçe aktarma penceresi -->
+    <string name="import_title">Sunucu içe aktar</string>
+    <string name="import_choose_file">.conf / .ovpn dosyası seç</string>
+    <string name="import_or_paste">…veya yapılandırmayı aşağıya yapıştır</string>
+    <string name="import_name_label">Ad (isteğe bağlı)</string>
+    <string name="import_config_label">Yapılandırma metni</string>
+    <string name="action_import">İçe aktar</string>
+    <string name="action_cancel">İptal</string>
+
+    <!-- Bildirim çubuğu / geçici mesajlar -->
+    <string name="msg_imported">\"%1$s\" içe aktarıldı</string>
+    <string name="msg_config_empty">Yapılandırma boş</string>
+    <string name="msg_parse_failed">Yapılandırma çözümlenemedi</string>
+    <string name="msg_no_public_servers">Şu anda kullanılabilir genel sunucu yok</string>
+    <string name="msg_load_failed">Genel sunucular yüklenemedi</string>
+    <string name="msg_connect_failed">Bağlantı başarısız</string>
+    <string name="msg_install_engine">Bu sunucuları kullanmak için \"OpenVPN for Android\" uygulamasını yükleyin</string>
+    <string name="msg_openvpn_failed">OpenVPN bağlantısı başarısız</string>
+</resources>

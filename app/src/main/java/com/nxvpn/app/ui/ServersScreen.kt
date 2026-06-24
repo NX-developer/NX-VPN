@@ -24,9 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nxvpn.app.R
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 import com.nxvpn.app.ui.theme.NxGreen
@@ -98,11 +100,11 @@ private fun ServerRow(
                 )
             }
             if (isActive) {
-                Icon(Icons.Filled.CheckCircle, contentDescription = "Active", tint = NxGreen)
+                Icon(Icons.Filled.CheckCircle, contentDescription = stringResource(R.string.cd_active), tint = NxGreen)
                 Spacer(Modifier.width(4.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete server")
+                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.cd_delete_server))
             }
         }
     }
@@ -117,10 +119,10 @@ private fun EmptyServers(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("No servers yet", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.servers_empty_title), style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.width(8.dp))
         Text(
-            "Tap the + button to import a WireGuard (.conf) or OpenVPN (.ovpn) config.",
+            stringResource(R.string.servers_empty_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )

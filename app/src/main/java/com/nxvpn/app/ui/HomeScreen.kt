@@ -38,9 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nxvpn.app.R
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 import com.nxvpn.app.data.model.TrafficStats
@@ -114,7 +116,9 @@ fun HomeScreen(
                 } else {
                     Icon(
                         imageVector = Icons.Filled.Power,
-                        contentDescription = if (isConnected) "Disconnect" else "Connect",
+                        contentDescription = stringResource(
+                            if (isConnected) R.string.cd_disconnect else R.string.cd_connect
+                        ),
                         tint = Color.White,
                         modifier = Modifier.size(64.dp),
                     )
@@ -123,7 +127,7 @@ fun HomeScreen(
         }
 
         Text(
-            text = if (isConnected) "Tap to disconnect" else "Tap to connect",
+            text = stringResource(if (isConnected) R.string.tap_to_disconnect else R.string.tap_to_connect),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
@@ -156,7 +160,7 @@ private fun SelectedServerCard(profile: ServerProfile?, onPickServer: () -> Unit
             if (profile == null) {
                 Icon(Icons.Filled.PublicOff, contentDescription = null)
                 Spacer(Modifier.width(12.dp))
-                Text("No server selected — tap to choose", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.no_server_selected), style = MaterialTheme.typography.bodyLarge)
             } else {
                 Text(profile.flagEmoji, fontSize = 28.sp)
                 Spacer(Modifier.width(12.dp))
@@ -190,7 +194,7 @@ private fun ConnectionStatsCard(connectedAtMillis: Long, traffic: TrafficStats) 
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Connected for", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.connected_for), style = MaterialTheme.typography.bodyMedium)
             Text(
                 formatDuration(elapsedSeconds),
                 fontSize = 32.sp,
@@ -198,8 +202,8 @@ private fun ConnectionStatsCard(connectedAtMillis: Long, traffic: TrafficStats) 
             )
             Spacer(Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TrafficPill(Icons.Filled.ArrowDownward, "Download", formatBytes(traffic.rxBytes))
-                TrafficPill(Icons.Filled.ArrowUpward, "Upload", formatBytes(traffic.txBytes))
+                TrafficPill(Icons.Filled.ArrowDownward, stringResource(R.string.traffic_download), formatBytes(traffic.rxBytes))
+                TrafficPill(Icons.Filled.ArrowUpward, stringResource(R.string.traffic_upload), formatBytes(traffic.txBytes))
             }
         }
     }
@@ -217,10 +221,11 @@ private fun TrafficPill(icon: androidx.compose.ui.graphics.vector.ImageVector, l
     }
 }
 
+@Composable
 private fun statusLabel(status: ConnectionStatus): String = when (status) {
-    is ConnectionStatus.Connected -> "Connected"
-    is ConnectionStatus.Connecting -> "Connecting…"
-    is ConnectionStatus.Disconnecting -> "Disconnecting…"
-    is ConnectionStatus.Error -> "Error: ${status.message}"
-    ConnectionStatus.Disconnected -> "Not connected"
+    is ConnectionStatus.Connected -> stringResource(R.string.status_connected)
+    is ConnectionStatus.Connecting -> stringResource(R.string.status_connecting)
+    is ConnectionStatus.Disconnecting -> stringResource(R.string.status_disconnecting)
+    is ConnectionStatus.Error -> stringResource(R.string.status_error, status.message)
+    ConnectionStatus.Disconnected -> stringResource(R.string.status_disconnected)
 }

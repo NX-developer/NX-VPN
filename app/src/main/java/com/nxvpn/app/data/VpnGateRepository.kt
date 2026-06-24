@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 
 /**
  * Fetches ready-to-use public OpenVPN servers from the VPN Gate volunteer network
@@ -72,7 +73,9 @@ class VpnGateRepository(
 
             servers += ServerProfile(
                 id = "vpngate:$hostName",
-                name = countryLong.ifBlank { countryShort.ifBlank { hostName } },
+                // Localise the country name to the device language (e.g. "JP" -> "Japonya"/"Japan").
+                name = localizedCountry(countryShort)
+                    ?: countryLong.ifBlank { countryShort.ifBlank { hostName } },
                 protocol = VpnProtocol.OPENVPN,
                 config = config,
                 countryCode = countryShort,
@@ -84,6 +87,18 @@ class VpnGateRepository(
             )
         }
         return servers.sortedByDescending { it.speedBps ?: 0L }.take(limit)
+    }
+
+    /**
+     * Resolves a 2-letter ISO country code to its name in the device's current language,
+     * or null when the code is invalid/unknown (callers fall back to the raw CSV value).
+     */
+    private fun localizedCountry(countryShort: String): String? {
+        val cc = countryShort.uppercase()
+        if (cc.length != 2 || cc.any { it !in 'A'..'Z' }) return null
+        val display = Locale("", cc).getDisplayCountry(Locale.getDefault())
+        // getDisplayCountry echoes the code back when it can't resolve it.
+        return display.takeIf { it.isNotBlank() && !it.equals(cc, ignoreCase = true) }
     }
 
     /** Turns a 2-letter ISO country code into its flag emoji (regional indicator symbols). */

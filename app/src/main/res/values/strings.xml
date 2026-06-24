@@ -1,4 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NX-VPN</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_free">Free</string>
+    <string name="nav_servers">Servers</string>
+
+    <!-- Connection status -->
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_disconnecting">Disconnecting…</string>
+    <string name="status_disconnected">Not connected</string>
+    <string name="status_error">Error: %1$s</string>
+
+    <!-- Home screen -->
+    <string name="tap_to_connect">Tap to connect</string>
+    <string name="tap_to_disconnect">Tap to disconnect</string>
+    <string name="cd_connect">Connect</string>
+    <string name="cd_disconnect">Disconnect</string>
+    <string name="no_server_selected">No server selected — tap to choose</string>
+    <string name="connected_for">Connected for</string>
+    <string name="traffic_download">Download</string>
+    <string name="traffic_upload">Upload</string>
+
+    <!-- Servers tab -->
+    <string name="servers_empty_title">No servers yet</string>
+    <string name="servers_empty_desc">Tap the + button to import a WireGuard (.conf) or OpenVPN (.ovpn) config.</string>
+    <string name="cd_active">Active</string>
+    <string name="cd_delete_server">Delete server</string>
+
+    <!-- Free servers tab -->
+    <string name="free_title">Ready-to-use servers</string>
+    <string name="free_subtitle">Free public OpenVPN relays (VPN Gate). Needs the OpenVPN engine app.</string>
+    <string name="cd_refresh">Refresh server list</string>
+    <string name="free_empty_title">No public servers loaded</string>
+    <string name="free_empty_desc">Tap refresh to fetch the latest free VPN Gate servers.</string>
+    <string name="search_hint">Search country or server…</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="search_no_results">No servers match \"%1$s\"</string>
+
+    <!-- Import dialog -->
+    <string name="import_title">Import server</string>
+    <string name="import_choose_file">Choose .conf / .ovpn file</string>
+    <string name="import_or_paste">…or paste the config below</string>
+    <string name="import_name_label">Name (optional)</string>
+    <string name="import_config_label">Config text</string>
+    <string name="action_import">Import</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Snackbar / transient messages -->
+    <string name="msg_imported">Imported \"%1$s\"</string>
+    <string name="msg_config_empty">Config is empty</string>
+    <string name="msg_parse_failed">Could not parse config</string>
+    <string name="msg_no_public_servers">No public servers available right now</string>
+    <string name="msg_load_failed">Could not load public servers</string>
+    <string name="msg_connect_failed">Connection failed</string>
+    <string name="msg_install_engine">Install \"OpenVPN for Android\" to use these servers</string>
+    <string name="msg_openvpn_failed">OpenVPN connection failed</string>
 </resources>
