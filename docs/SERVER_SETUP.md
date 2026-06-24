@@ -1,28 +1,33 @@
-# Sunucu kurulumu
+# Server setup
 
-NX-VPN bir istemcidir; çıkış sunucusunu sen sağlarsın. En kolay ve en hızlı yol **WireGuard**'dır
-(uygulamada tam çalışır). Aşağıda iki seçenek var.
+**English** | [Türkçe](SERVER_SETUP.tr.md)
+
+NX-VPN is a client; you provide the exit server. The easiest and fastest path is **WireGuard**
+(fully supported in the app). Two options are described below.
+
+> Prefer not to run a server? Use the **Free tab** to connect to public VPN Gate servers with one
+> tap (volunteer-run and untrusted — see the README).
 
 ---
 
-## Seçenek A — WireGuard, `wg-easy` ile (önerilen)
+## Option A — WireGuard, with `wg-easy` (recommended)
 
-`wg-easy`, web arayüzlü, Docker tabanlı bir WireGuard sunucusudur. Birkaç dakikada ABD/Almanya vb.
-bir VPS'te ayağa kalkar.
+`wg-easy` is a Docker-based WireGuard server with a web UI. It comes up on a US/Germany/etc. VPS in
+a few minutes.
 
-### 1. Bir VPS kirala
-Örn. ABD lokasyonu için Hetzner, DigitalOcean, Vultr, AWS Lightsail. Ubuntu 22.04 yeterli.
+### 1. Rent a VPS
+E.g. Hetzner, DigitalOcean, Vultr, AWS Lightsail for a US location. Ubuntu 22.04 is enough.
 
-### 2. Docker + wg-easy kur
+### 2. Install Docker + wg-easy
 
 ```bash
 # Docker
 curl -fsSL https://get.docker.com | sh
 
-# wg-easy (WG_HOST = sunucunun genel IP'si; PASSWORD = panel şifresi)
+# wg-easy (WG_HOST = the server's public IP; PASSWORD = panel password)
 docker run -d --name wg-easy \
-  -e WG_HOST=<SUNUCU_GENEL_IP> \
-  -e PASSWORD=<PANEL_SIFRESI> \
+  -e WG_HOST=<SERVER_PUBLIC_IP> \
+  -e PASSWORD=<PANEL_PASSWORD> \
   -e WG_DEFAULT_DNS=1.1.1.1 \
   -v ~/.wg-easy:/etc/wireguard \
   -p 51820:51820/udp \
@@ -34,36 +39,35 @@ docker run -d --name wg-easy \
   ghcr.io/wg-easy/wg-easy
 ```
 
-> Güvenlik duvarında **51820/udp** (tünel) ve panele erişmek için **51821/tcp** açık olmalı.
+> The firewall must allow **51820/udp** (tunnel) and **51821/tcp** to reach the panel.
 
-### 3. İstemci oluştur ve `.conf` indir
-`http://<SUNUCU_IP>:51821` adresinden panele gir → **New Client** → oluşan QR/`.conf` dosyasını indir.
+### 3. Create a client and download the `.conf`
+Open the panel at `http://<SERVER_IP>:51821` → **New Client** → download the generated QR/`.conf`.
 
-### 4. NX-VPN'e aktar
-Uygulama → **Servers** → **+** → `.conf` dosyasını seç (veya içeriğini yapıştır) → **Import** → bağlan.
+### 4. Import into NX-VPN
+App → **Servers** → **+** → pick the `.conf` file (or paste its contents) → **Import** → connect.
 
 ---
 
-## Seçenek B — OpenVPN (`.ovpn`)
+## Option B — OpenVPN (`.ovpn`)
 
-OpenVPN sunucusu için `angristan/openvpn-install` script'i pratiktir:
+For an OpenVPN server, the `angristan/openvpn-install` script is convenient:
 
 ```bash
 curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
 chmod +x openvpn-install.sh
-sudo ./openvpn-install.sh   # sorulara cevap ver, bir istemci adı gir → <istemci>.ovpn üretir
+sudo ./openvpn-install.sh   # answer the prompts, enter a client name → produces <client>.ovpn
 ```
 
-Üretilen `.ovpn` dosyası NX-VPN'e içe aktarılıp saklanır ve arayüzde görünür.
+The generated `.ovpn` file can be imported into NX-VPN, where it is stored and shown in the UI.
 
-> **Not:** OpenVPN ile fiilen **tünel kurma** özelliği bu derlemede henüz aktif değildir
-> (bkz. README "Protokol durumu"). Aktifleştirmek için `ics-openvpn` backend modülünün
-> projeye submodule olarak eklenmesi ve `VpnManager.connect`'teki OpenVPN dalının bu modüle
-> bağlanması gerekir. Bu, NDK ile native derleme gerektiren ayrı bir adımdır. Önce WireGuard
-> ile uçtan uca çalışan bir akış kurman önerilir.
+> **How OpenVPN tunnels:** NX-VPN delegates the actual OpenVPN tunnel to the open-source
+> **OpenVPN for Android** engine over its external API. When you connect to an OpenVPN profile, if
+> that app isn't installed NX-VPN sends you to its F-Droid page for a one-time install. See the
+> README "Protocol status" section.
 
 ---
 
-## Hızlı test ipucu
-Önce ücretsiz/halka açık bir WireGuard config'i ile arayüzü test edebilirsin; ardından kendi
-sunucunu kurup gerçek "ABD çıkışı" elde edersin.
+## Quick test tip
+You can first test the UI with a free/public WireGuard config; then set up your own server to get a
+real "US exit".

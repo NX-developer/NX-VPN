@@ -65,7 +65,7 @@ kurman önerilir. Kaynak: <https://www.vpngate.net/>.
 - **Kendi çıkış noktan:** Tam kontrol ve gizlilik için açık kaynaklı bir VPN sunucusu kur (örn. bir ABD
   VPS'inde **WireGuard / `wg-easy`**), üreteceğin `.conf` dosyasını içe aktar ve bağlan.
 
-Adım adım kendi sunucu kurulumu: [`docs/SERVER_SETUP.md`](docs/SERVER_SETUP.md).
+Adım adım kendi sunucu kurulumu: [`docs/SERVER_SETUP.tr.md`](docs/SERVER_SETUP.tr.md).
 
 ---
 
@@ -81,7 +81,7 @@ Yerel makinede Android SDK ile:
 CI tarafında **GitHub Actions** akışı yalnızca sürüm etiketlerinde (ör. `v1.0.1`) derler: birim
 testlerini çalıştırır, APK'yı derler, **Artifacts** altına yükler ve bir **GitHub Release** yayınlar.
 `main`'e düz push artık derleme tetiklemez — anlık derleme için **Run workflow** butonunu
-(`workflow_dispatch`) kullan. Ayrıntılar: [`docs/BUILD.md`](docs/BUILD.md).
+(`workflow_dispatch`) kullan. Ayrıntılar: [`docs/BUILD.tr.md`](docs/BUILD.tr.md).
 
 Sürüm yayınlamak için:
 
