@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -26,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 
-private enum class Tab(val label: String) { HOME("Home"), SERVERS("Servers") }
+private enum class Tab(val label: String) { HOME("Home"), FREE("Free"), SERVERS("Servers") }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +40,8 @@ fun NxVpnApp(
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
     val traffic by viewModel.traffic.collectAsStateWithLifecycle()
     val snackbarMessage by viewModel.snackbar.collectAsStateWithLifecycle()
+    val freeServers by viewModel.freeServers.collectAsStateWithLifecycle()
+    val freeLoading by viewModel.freeLoading.collectAsStateWithLifecycle()
 
     var tab by remember { mutableStateOf(Tab.HOME) }
     var showImport by remember { mutableStateOf(false) }
@@ -50,6 +53,13 @@ fun NxVpnApp(
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.consumeSnackbar()
+        }
+    }
+
+    // Lazily fetch the public server list the first time the user opens the Free tab.
+    LaunchedEffect(tab) {
+        if (tab == Tab.FREE && freeServers.isEmpty() && !freeLoading) {
+            viewModel.refreshFreeServers()
         }
     }
 
@@ -67,6 +77,12 @@ fun NxVpnApp(
                     onClick = { tab = Tab.HOME },
                     icon = { Icon(Icons.Filled.Home, contentDescription = null) },
                     label = { Text(Tab.HOME.label) },
+                )
+                NavigationBarItem(
+                    selected = tab == Tab.FREE,
+                    onClick = { tab = Tab.FREE },
+                    icon = { Icon(Icons.Filled.Public, contentDescription = null) },
+                    label = { Text(Tab.FREE.label) },
                 )
                 NavigationBarItem(
                     selected = tab == Tab.SERVERS,
@@ -92,6 +108,23 @@ fun NxVpnApp(
                 onConnect = onConnectRequested,
                 onDisconnect = viewModel::disconnect,
                 onPickServer = { tab = Tab.SERVERS },
+                modifier = Modifier.padding(innerPadding),
+            )
+            Tab.FREE -> FreeServersScreen(
+                servers = freeServers,
+                loading = freeLoading,
+                status = status,
+                onConnect = { profile ->
+                    selectedId = profile.id
+                    if (status.activeProfile?.id == profile.id &&
+                        (status is ConnectionStatus.Connected || status is ConnectionStatus.Connecting)
+                    ) {
+                        viewModel.disconnect()
+                    } else {
+                        onConnectRequested(profile)
+                    }
+                },
+                onRefresh = viewModel::refreshFreeServers,
                 modifier = Modifier.padding(innerPadding),
             )
             Tab.SERVERS -> ServersScreen(

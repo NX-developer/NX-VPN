@@ -18,6 +18,12 @@ data class ServerProfile(
     val countryCode: String = "",
     val flagEmoji: String = "🌐",
     val endpoint: String = "",
+    /** Round-trip latency in ms, when known (public servers only). */
+    val pingMs: Int? = null,
+    /** Advertised throughput in bits/second, when known (public servers only). */
+    val speedBps: Long? = null,
+    /** True for ready-made public servers (e.g. VPN Gate) that are fetched, not user-imported. */
+    val isPublic: Boolean = false,
 ) {
     val subtitle: String
         get() = buildString {

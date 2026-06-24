@@ -67,6 +67,8 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // Generates the de.blinkt.openvpn.api stubs so we can drive the OpenVPN for Android engine.
+        aidl = true
     }
 
     composeOptions {

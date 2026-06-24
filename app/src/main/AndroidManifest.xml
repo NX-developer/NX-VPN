@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- We hand OpenVPN profiles to the user's installed OpenVPN for Android engine over its
+         external API. Android 11+ requires declaring that package to see/bind to it. -->
+    <queries>
+        <package android:name="de.blinkt.openvpn" />
+    </queries>
+
     <application
         android:name=".NxVpnApplication"
         android:allowBackup="false"

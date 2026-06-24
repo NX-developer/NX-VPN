@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nxvpn.app.data.ConfigImporter
 import com.nxvpn.app.data.ProfileRepository
+import com.nxvpn.app.data.VpnGateRepository
 import com.nxvpn.app.data.model.ConnectionStatus
 import com.nxvpn.app.data.model.ServerProfile
 import com.nxvpn.app.data.model.TrafficStats
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     private val repository: ProfileRepository,
     private val vpnManager: VpnManager,
+    private val vpnGate: VpnGateRepository = VpnGateRepository(),
 ) : ViewModel() {
 
     val profiles: StateFlow<List<ServerProfile>> =
@@ -34,6 +36,13 @@ class MainViewModel(
 
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar.asStateFlow()
+
+    /** Ready-made public servers fetched from VPN Gate. */
+    private val _freeServers = MutableStateFlow<List<ServerProfile>>(emptyList())
+    val freeServers: StateFlow<List<ServerProfile>> = _freeServers.asStateFlow()
+
+    private val _freeLoading = MutableStateFlow(false)
+    val freeLoading: StateFlow<Boolean> = _freeLoading.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -62,6 +71,24 @@ class MainViewModel(
     fun deleteProfile(id: String) {
         viewModelScope.launch { repository.delete(id) }
     }
+
+    /** Loads the public VPN Gate server list. Safe to call repeatedly; the UI calls it lazily. */
+    fun refreshFreeServers() {
+        if (_freeLoading.value) return
+        viewModelScope.launch {
+            _freeLoading.value = true
+            vpnGate.fetch()
+                .onSuccess { servers ->
+                    _freeServers.value = servers
+                    if (servers.isEmpty()) _snackbar.value = "No public servers available right now"
+                }
+                .onFailure { _snackbar.value = it.message ?: "Could not load public servers" }
+            _freeLoading.value = false
+        }
+    }
+
+    /** Pushes a one-off message to the snackbar (used by the Activity's OpenVPN flow). */
+    fun showMessage(message: String) { _snackbar.value = message }
 
     /** Called by the Activity once VPN consent has been granted. */
     fun connect(profile: ServerProfile) {

@@ -20,8 +20,10 @@ import java.io.StringReader
 /**
  * Single entry point for bringing tunnels up and down.
  *
- * WireGuard is handled in-process by the bundled [GoBackend]. OpenVPN support is staged behind
- * [OpenVpnNotEnabledException] until the ics-openvpn backend module is wired in (see docs/SERVER_SETUP.md).
+ * WireGuard is handled in-process by the bundled [GoBackend]. OpenVPN is delegated to the user's
+ * installed "OpenVPN for Android" engine through [openVpn] (the AIDL external API); because that
+ * flow needs Activity-launched consent dialogs, the OpenVPN connection is orchestrated by the
+ * Activity, while disconnect/status routing stays centralised here.
  */
 class VpnManager(context: Context) {
 
@@ -32,18 +34,15 @@ class VpnManager(context: Context) {
     private val _status = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected)
     val status: StateFlow<ConnectionStatus> = _status.asStateFlow()
 
-    class OpenVpnNotEnabledException : Exception(
-        "OpenVPN backend is not enabled in this build. Import a WireGuard config, " +
-            "or follow docs/SERVER_SETUP.md to enable the OpenVPN module."
-    )
+    /** OpenVPN delegate. Public so the Activity can drive its consent dialogs. */
+    val openVpn = OpenVpnConnector(appContext) { _status.value = it }
 
+    /** Brings up a WireGuard tunnel. OpenVPN is handled via [openVpn] from the Activity. */
     suspend fun connect(profile: ServerProfile, monotonicNow: Long) {
         when (profile.protocol) {
             VpnProtocol.WIREGUARD -> connectWireGuard(profile, monotonicNow)
-            VpnProtocol.OPENVPN -> {
-                _status.value = ConnectionStatus.Error("OpenVPN is not enabled yet in this build.")
-                throw OpenVpnNotEnabledException()
-            }
+            VpnProtocol.OPENVPN ->
+                _status.value = ConnectionStatus.Error("OpenVPN connections are started via the OpenVPN engine.")
         }
     }
 
@@ -67,6 +66,11 @@ class VpnManager(context: Context) {
     }
 
     suspend fun disconnect() {
+        // Route to whichever backend owns the active tunnel.
+        if (_status.value.activeProfile?.protocol == VpnProtocol.OPENVPN) {
+            openVpn.disconnect()
+            return
+        }
         val tunnel = activeTunnel ?: run {
             _status.value = ConnectionStatus.Disconnected
             return

@@ -2,6 +2,7 @@ package com.nxvpn.app
 
 import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -10,10 +11,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.nxvpn.app.data.model.ServerProfile
+import com.nxvpn.app.data.model.VpnProtocol
 import com.nxvpn.app.ui.MainViewModel
 import com.nxvpn.app.ui.NxVpnApp
 import com.nxvpn.app.ui.theme.NXVPNTheme
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -54,6 +59,15 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* result is informational; tunnel works regardless */ }
 
+    /** Generic launcher used to await the OpenVPN engine's one-time consent dialogs. */
+    private var pendingActivityResult: CompletableDeferred<Boolean>? = null
+    private val openVpnConsentLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        pendingActivityResult?.complete(result.resultCode == RESULT_OK)
+        pendingActivityResult = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         maybeRequestNotificationPermission()
@@ -69,14 +83,66 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Ensures VPN consent before asking the ViewModel to bring the tunnel up. */
+    /** Routes a connect request to the right backend, handling each one's consent flow. */
     private fun requestConnect(profile: ServerProfile) {
-        val consentIntent: Intent? = VpnService.prepare(this)
-        if (consentIntent != null) {
-            pendingProfile = profile
-            vpnPermissionLauncher.launch(consentIntent)
-        } else {
-            viewModel.connect(profile)
+        when (profile.protocol) {
+            VpnProtocol.WIREGUARD -> {
+                val consentIntent: Intent? = VpnService.prepare(this)
+                if (consentIntent != null) {
+                    pendingProfile = profile
+                    vpnPermissionLauncher.launch(consentIntent)
+                } else {
+                    viewModel.connect(profile)
+                }
+            }
+            VpnProtocol.OPENVPN -> connectOpenVpn(profile)
+        }
+    }
+
+    /**
+     * Brings up an OpenVPN tunnel through the installed OpenVPN for Android engine. Walks the two
+     * one-time consent dialogs (external-API permission, then the system VPN dialog) before
+     * handing over the inline config.
+     */
+    private fun connectOpenVpn(profile: ServerProfile) {
+        val openVpn = app.vpnManager.openVpn
+        if (!openVpn.isEngineInstalled()) {
+            promptInstallEngine()
+            return
+        }
+        lifecycleScope.launch {
+            runCatching {
+                openVpn.beginConnecting(profile)
+                openVpn.awaitService()
+                openVpn.prepareApiPermission()?.let { intent ->
+                    if (!launchForOk(intent)) { openVpn.cancel(); return@launch }
+                }
+                openVpn.registerStatusCallback()
+                openVpn.prepareVpnService()?.let { intent ->
+                    if (!launchForOk(intent)) { openVpn.cancel(); return@launch }
+                }
+                openVpn.startVpn(profile)
+            }.onFailure {
+                openVpn.cancel()
+                viewModel.showMessage(it.message ?: "OpenVPN connection failed")
+            }
+        }
+    }
+
+    /** Launches [intent] for result and suspends until the user responds. */
+    private suspend fun launchForOk(intent: Intent): Boolean {
+        val deferred = CompletableDeferred<Boolean>()
+        pendingActivityResult = deferred
+        openVpnConsentLauncher.launch(intent)
+        return deferred.await()
+    }
+
+    private fun promptInstallEngine() {
+        viewModel.showMessage("Install \"OpenVPN for Android\" to use these servers")
+        runCatching {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse("https://f-droid.org/packages/de.blinkt.openvpn/"))
+            )
         }
     }
 
